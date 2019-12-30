@@ -1,0 +1,95 @@
+<html>
+  <head>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+
+    <script type="text/javascript">
+      var socket = io.connect('http://' + document.domain + ':' + location.port);
+      var clicker = true
+      var measureClicker = true
+      $(document).ready(function(){
+        $("#checkConnection").click(function(){
+          socket.emit('checkConnection');
+        });
+        $("#startLoading").click(function(){
+          socket.emit('startLoading');
+        });
+        $("#start_Motors").click(function(){
+          var speed = document.getElementById("setSpeed").value;
+          socket.emit('start_Motors', speed);
+          if(clicker){
+            document.getElementById("start_Motors").innerHTML = "Stop motors"
+            clicker = false
+          }else{
+            document.getElementById("start_Motors").innerHTML = "Start motors"
+            clicker = true
+          }
+        });
+        $("#measurement").click(function(){
+          if(measureClicker){
+            socket.emit('startMeasurement');
+            //document.getElementById("measurement").value = "Stop Measuring";
+            document.getElementById("measurement").innerHTML = "Stop Measuring";
+            measureClicker = false;
+          }else{
+            socket.emit('stopMeasurement');
+            document.getElementById("measurement").innerHTML = "Start Measuring";
+            measureClicker = true;
+          }
+        });
+      });
+
+      socket.on('connectState', function connectState(state){
+        btnState = document.getElementById("checkConnection");
+        if(state){
+          btnState.setAttribute("class", "btn btn-success");
+          btnState.innerHTML = "Connected";
+        }else{
+          btnState.setAttribute("class", "btn btn-danger");
+          btnState.innerHTML = "Connnection failed";
+        }
+      });
+
+      socket.on("getMeasurementData", function measurementData(data){
+        $(".measurementData").append(data+"<br />");
+        //$('#measurementData').scrollTop($('#measurementData')[0].scrollHeight);
+      });
+
+    </script>
+  </head>
+  <body style="background-color:rgb(240, 240, 240);">
+    <div class="container">
+      <nav class="navbar fixed-top navbar-light" style="background-color: #e3f2fd;">
+        <h1>Group38</h1>
+      </nav>
+      <div class="col-sm" style="margin-bottom: 20px;">
+        <button id="checkConnection" class="btn btn-info">Check Connection</button>
+      </div>
+      <div class="col-sm" style="margin-bottom: 20px;">
+        <button id="startLoading" class="btn btn-info">Start Loading</button>
+      </div>
+      <label>Speed:</label>
+      <div class="input-group" style="margin-bottom: 20px;">
+        <input type="text" class="form-control" id="setSpeed" placeholder="Set speed"/>
+        <span class="input-group-btn">
+          <button id="start_Motors" class="btn btn-info" type="button">Start motors</button>
+        </span>
+      </div>
+      <div class="col-sm" style="margin-bottom: 20px;">
+        <button id="measurement" class="btn btn-primary">Start Measuring</button>
+      </div>
+      <div class="col-sm" style="margin-bottom: 20px;">
+        <label>Measurements:</label>
+        <div class="measurementData form-control" style="height:200px;overflow:auto;padding:2%;border:2px solid black;display:flex;flex-direction:column-reverse;"></div>
+      </div>
+      <div class="col-sm" style="margin-bottom: 20px;">
+        <img src="train.png" style="width:100%;height:350px" alt="Image of Train Group 38">
+      </div>
+    </div>
+  </body>
+</html>
